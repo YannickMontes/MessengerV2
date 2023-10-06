@@ -1,6 +1,6 @@
 import bcrypt from "bcrypt";
-import User, { IUser } from "../Models/UserModel"; // You should import the appropriate User model and IUser interface.
-import { pickRandom } from "../../../pictures";
+import User, { IUser } from "../Models/UserModel.js"; // You should import the appropriate User model and IUser interface.
+import { pickRandom } from "../../../pictures.js";
 
 const ACTIVE_TIMER_MS = 20000;
 

@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import { Request, Response, NextFunction } from "express";
-import config from "../config";
+import config from "../config.js";
 
 async function checkToken(req: Request, res: Response, next: NextFunction) {
 	let token = req.headers.authorization;

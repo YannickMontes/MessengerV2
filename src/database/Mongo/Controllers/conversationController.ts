@@ -1,7 +1,6 @@
-import ConversationModel, { IConversation } from "../Models/ConversationModel";
-import mongoose from "mongoose";
-import { IMessage } from "../Models/MessageModel";
-import { MessageResult } from "./messageController";
+import ConversationModel, { IConversation } from "../Models/ConversationModel.js";
+import { IUser } from "../Models/UserModel.js";
+import { MongooseID } from "../../../types";
 
 interface ConversationResult {
 	conversation?: IConversation | null;
@@ -15,19 +14,20 @@ interface ConversationsResult {
 
 class ConversationController {
 	async getConversationWithParticipants(
-		participants: string[]
+		participants: MongooseID[]
 	): Promise<ConversationResult> {
 		try {
-			let allTypeConv = await ConversationModel
-				.find()
-				.populate("messages");
+			let allTypeConv = await ConversationModel.find();
 			let conversation = allTypeConv.find(
 				(conv) =>
 					conv.participants.length === participants.length &&
 					participants.every((participant) =>
+						//@ts-ignore
 						conv.participants.includes(participant)
 					)
 			);
+			conversation = await conversation?.populate("messages");
+			conversation = await conversation?.populate("participants");
 			return { conversation };
 		} catch (error) {
 			return { error };
@@ -35,14 +35,15 @@ class ConversationController {
 	}
 
 	async getAllConversationsForUser(
-		username: string
+		userId: MongooseID
 	): Promise<ConversationsResult> {
 		try {
-			let allConvs = await ConversationModel
-				.find()
-				.populate("messages");
+			let allConvs = await ConversationModel.find()
+				.populate("messages")
+				.populate("participants");
 			let conversations = allConvs.filter((conv) =>
-				conv.participants.includes(username)
+				//@ts-ignore
+				conv.participants.includes(userId)
 			);
 			return { conversations };
 		} catch (error) {
@@ -50,13 +51,11 @@ class ConversationController {
 		}
 	}
 
-	async getConversationById(
-		id: mongoose.Schema.Types.ObjectId | string
-	): Promise<ConversationResult> {
+	async getConversationById(id: MongooseID): Promise<ConversationResult> {
 		try {
-			let conversation = await ConversationModel
-				.findById(id)
-				.populate("messages");
+			let conversation = await ConversationModel.findById(id)
+				.populate("messages")
+				.populate("participants");
 			return { conversation };
 		} catch (error) {
 			return { error };
@@ -64,15 +63,14 @@ class ConversationController {
 	}
 
 	async createConversation(
-		participants: string[]
+		participants: MongooseID[],
+		participantsNames: string[]
 	): Promise<ConversationResult> {
 		try {
-			let seen: Record<string, number> = {};
 			let title = "";
-			for (let username of participants) {
-				seen[username] = -1;
-				let index = participants.indexOf(username);
-				if (index == participants.length - 1) {
+			for (let username of participantsNames) {
+				let index = participantsNames.indexOf(username);
+				if (index == participantsNames.length - 1) {
 					title += " et ";
 				} else if (index != 0) {
 					title += ", ";
@@ -83,8 +81,8 @@ class ConversationController {
 				participants,
 				title,
 				lastUpdate: new Date(),
-				seen,
 			});
+			conversation = await conversation.populate("participants");
 			conversation = await conversation.save();
 			return { conversation };
 		} catch (error) {
@@ -94,14 +92,13 @@ class ConversationController {
 
 	async addMessageToConversation(
 		conversation: IConversation,
-		messageId: string
+		messageId: MongooseID
 	): Promise<ConversationResult> {
 		try {
 			//@ts-ignore
 			conversation.messages.push(messageId);
 			conversation.lastUpdate = new Date();
 			conversation = await conversation.save();
-			conversation = await conversation.populate("messages");
 			return { conversation };
 		} catch (error) {
 			return { error };
@@ -109,19 +106,17 @@ class ConversationController {
 	}
 
 	async setConversationSeenForUserAndMessage(
-		user: { username: string },
-		conversationId: mongoose.Schema.Types.ObjectId,
-		messageId: mongoose.Schema.Types.ObjectId
+		user: IUser,
+		conversationId: MongooseID,
+		messageId: MongooseID
 	): Promise<ConversationResult> {
-		let { conversation, error } = await this.getConversationById(
-			conversationId
-		);
+		let { conversation, error } = await this.getConversationById(conversationId);
 		if (error) {
 			return { error };
 		}
 		if (!conversation) return { conversation: null };
 		try {
-			conversation.seen[user.username] = messageId;
+			conversation.seen.set(user.username, messageId);
 			conversation.markModified("seen");
 			conversation = await conversation.save();
 			return { conversation };
@@ -131,15 +126,16 @@ class ConversationController {
 	}
 
 	async updateConversationTime(
-		conversationId: mongoose.Schema.Types.ObjectId
+		conversationId: MongooseID
 	): Promise<ConversationResult> {
 		try {
-			let conversation = await ConversationModel.findByIdAndUpdate(
-				conversationId,
+			let conversation = await ConversationModel.findByIdAndUpdate(conversationId,
 				{
 					lastUpdate: Date.now(),
 				}
-			);
+			)
+			.populate("participants")
+			.populate("messages");
 			return { conversation };
 		} catch (error) {
 			return { error };
@@ -147,7 +143,7 @@ class ConversationController {
 	}
 
 	async deleteConversation(
-		conversationId: string
+		conversationId: MongooseID
 	): Promise<ConversationResult> {
 		try {
 			let conversation = await ConversationModel.findByIdAndDelete(

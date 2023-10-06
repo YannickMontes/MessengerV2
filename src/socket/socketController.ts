@@ -1,4 +1,6 @@
-import type { Database } from "../database/database";
+import type { Database } from "../database/database.js";
+import { Server, Socket } from "socket.io";
+import { IMessage, Reaction } from "../database/Mongo/Models/MessageModel.js";
 
 interface ActiveUsers {
 	[socketId: string]: string;
@@ -6,8 +8,6 @@ interface ActiveUsers {
 
 const activeUsers: ActiveUsers = {};
 
-import { Server, Socket } from "socket.io";
-import { IMessage } from "../database/Mongo/Models/MessageModel";
 function onSocketConnection(io: Server, socket: Socket, database: Database) {
 	console.log("Socket connected");
 
@@ -28,7 +28,7 @@ function onSocketConnection(io: Server, socket: Socket, database: Database) {
 		await editMessage(data, callback, socket, database);
 	});
 
-	socket.on("@reactMessage", async (data: {username: string, messageId: string, conversationId: string, reaction: string}, callback) => {
+	socket.on("@reactMessage", async (data: {username: string, messageId: string, conversationId: string, reaction: Reaction}, callback) => {
 		await reactMessage(data, callback, socket, database);
 	});
 
@@ -71,24 +71,27 @@ async function onNewMessage( { username, conversationId, messageContent, message
 				callback({ status: 404, message: "No reply message found" });
 				return;
 			}
+
+			replyMessage = msgResponse.message;
 		}
 		
-		const msgResponse = await database.messageController.createMessage(username, messageContent, conversationId, replyMessage);
-
-		if (msgResponse.error || !msgResponse.message) {
-			callback({ status: 500, message: msgResponse.error });
-			return;
-		}
-
+		
 		const convResponse = await database.conversationController.getConversationById(conversationId);
-
+		
 		if (convResponse.error) {
 			callback({ status: 500, message: convResponse.error });
 			return;
 		}
-
+		
 		if(!convResponse.conversation){
 			callback({ status: 404, message: "No conversation found."});
+			return;
+		}
+		
+		const msgResponse = await database.messageController.createMessage(username, messageContent, conversationId, replyMessage?._id);
+
+		if (msgResponse.error || !msgResponse.message) {
+			callback({ status: 500, message: msgResponse.error });
 			return;
 		}
 
@@ -126,7 +129,32 @@ async function createConversation( { username, concernedUsers }:
 		return;
 	}
 
-	convResponse = await database.conversationController.createConversation(concernedUsers);
+	let allUsersPromises = [];
+	for(let participantId of concernedUsers)
+	{
+		allUsersPromises.push(database.userController.getUserById(participantId));
+	}
+	let allUsersRes = await Promise.all(allUsersPromises);
+
+	let userNames = [];
+	for(let userResult of allUsersRes)
+	{
+		if(userResult.error)
+		{
+			callback({ status: 500, message: userResult.error });
+			return;
+		}
+
+		if(!userResult.user)
+		{
+			callback({ status: 404, message: "User not found." });
+			return;
+		}
+
+		userNames.push(userResult.user?.username);
+	}
+
+	convResponse = await database.conversationController.createConversation(concernedUsers, userNames);
 	
 	if(convResponse.error)
 	{
@@ -162,11 +190,19 @@ async function editMessage( { messageId, newContent, conversationId }:
 }
 
 async function reactMessage( { username, messageId, reaction, conversationId }: 
-			{ username:string, messageId: string; reaction: string; conversationId: string; },
+			{ username:string, messageId: string; reaction: Reaction; conversationId: string; },
 		callback: Function,
 		socket: Socket,
 		database: Database)
 {
+	let enumCorrect = Object.values(Reaction).includes(reaction);
+
+	if(!enumCorrect)
+	{
+		callback({status: 401, message: "You have to provide a valid enum type for 'reaction'. (HAPPY, LOVE, THUMBSUP, THUMBSDOWN, SAD)"});
+		return;
+	}
+
 	let msgResponse = await database.messageController.reactToMessage(username, messageId, reaction);
 	if(msgResponse.error)
 	{

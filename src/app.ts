@@ -1,11 +1,11 @@
 import * as http from "http";
 import express from "express";
 import { Server } from "socket.io";
-import { Database } from "./database/database";
-import onSocketConnection from "./socket/socketController";
-import userRoutes from "./routes/userRoutes";
-import conversationRoutes from "./routes/conversationRoutes";
-import checkToken from "./middleware/checkToken";
+import { Database } from "./database/database.js";
+import onSocketConnection from "./socket/socketController.js";
+import userRoutes from "./routes/userRoutes.js";
+import conversationRoutes from "./routes/conversationRoutes.js";
+import checkToken from "./middleware/checkToken.js";
 
 const app = express();
 

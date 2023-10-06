@@ -1,11 +1,11 @@
-import type { ConversationController } from "./Mongo/Controllers/conversationController";
-import type { MessageController } from "./Mongo/Controllers/messageController";
-import type { UserController } from "./Mongo/Controllers/userController";
-import { conversationController } from "./Mongo/Controllers/conversationController";
-import { messageController } from "./Mongo/Controllers/messageController";
-import { userController } from "./Mongo/Controllers/userController";
+import type { ConversationController } from "./Mongo/Controllers/conversationController.js";
+import type { MessageController } from "./Mongo/Controllers/messageController.js";
+import type { UserController } from "./Mongo/Controllers/userController.js";
+import { conversationController } from "./Mongo/Controllers/conversationController.js";
+import { messageController } from "./Mongo/Controllers/messageController.js";
+import { userController } from "./Mongo/Controllers/userController.js";
 import mongoose from "mongoose";
-import config from "../config";
+import config from "../config.js";
 
 class Database {
 	conversationController: ConversationController;

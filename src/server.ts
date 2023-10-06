@@ -1,6 +1,6 @@
-import { makeApp } from "./app";
-import DBInstance from "./database/database";
-import config from "./config";
+import { makeApp } from "./app.js";
+import DBInstance from "./database/database.js";
+import config from "./config.js";
 
 const { app, server } = makeApp(DBInstance);
 

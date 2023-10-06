@@ -1,14 +1,24 @@
 import mongoose, { Schema, Document } from "mongoose";
+import { MongooseID } from "../../../types";
 
 export interface IMessage extends Document {
-	conversationId: mongoose.Schema.Types.ObjectId;
-	from: string;
+	conversationId: MongooseID;
+	from: MongooseID;
 	content: string;
 	postedAt: Date;
-	replyTo: Record<string, any> | null;
+	replyTo: MongooseID;
 	edited: boolean;
 	deleted: boolean;
-	reactions: Record<string, any>;
+	reactions: Map<MongooseID, Reaction>;
+}
+
+export enum Reaction
+{
+	HAPPY = "HAPPY",
+	SAD = "SAD",
+	THUMBSUP = "THUMBSUP",
+	THUMBSDOWN = "THUMBSDOWN",
+	LOVE = "LOVE"
 }
 
 const MessageSchema: Schema<IMessage> = new Schema<IMessage>(
@@ -19,7 +29,8 @@ const MessageSchema: Schema<IMessage> = new Schema<IMessage>(
 			required: true,
 		},
 		from: {
-			type: String,
+			type: Schema.ObjectId,
+			ref: 'User',
 			required: true,
 		},
 		content: {
@@ -31,7 +42,8 @@ const MessageSchema: Schema<IMessage> = new Schema<IMessage>(
 			default: new Date(),
 		},
 		replyTo: {
-			type: Object,
+			type: Schema.ObjectId,
+			ref: 'Message',
 			default: null,
 		},
 		edited: {
@@ -43,7 +55,8 @@ const MessageSchema: Schema<IMessage> = new Schema<IMessage>(
 			default: false,
 		},
 		reactions: {
-			type: Object,
+			type: Map,
+			of: String,
 			default: {},
 		},
 	},

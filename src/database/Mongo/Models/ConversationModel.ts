@@ -1,18 +1,19 @@
-import mongoose, { Schema, Document } from "mongoose";
-import { IMessage } from "./MessageModel";
+import mongoose, { Schema, Document, SchemaType } from "mongoose";
+import { IMessage } from "./MessageModel.js";
+import { MongooseID } from "../../../types.js";
 
 export interface IConversation extends Document {
-	participants: string[];
-	messages: IMessage[];
+	participants: MongooseID[];
+	messages: IMessage[] | MongooseID[];
 	title: string | null;
 	lastUpdate: Date;
-	seen: Record<string, mongoose.Schema.Types.ObjectId>;
+	seen: Map<MongooseID, MongooseID>;
 }
 
 const conversationSchema: Schema<IConversation> = new Schema<IConversation>(
 	{
 		participants: {
-			type: [String],
+			type: [{type: Schema.ObjectId, ref: 'User'}],
 			required: true,
 		},
 		messages: {
@@ -28,7 +29,8 @@ const conversationSchema: Schema<IConversation> = new Schema<IConversation>(
 			default: new Date(),
 		},
 		seen: {
-			type: Object,
+			type: Map,
+			of: Schema.ObjectId,
 			default: {},
 		},
 	},

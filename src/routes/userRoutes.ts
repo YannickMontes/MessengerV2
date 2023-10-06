@@ -1,8 +1,8 @@
 import express, { Request, Response } from "express";
-import { userBodyFormat } from "../requestFormat";
+import { userBodyFormat } from "../requestFormat.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import config from "../config";
+import config from "../config.js";
 
 require("dotenv").config();
 

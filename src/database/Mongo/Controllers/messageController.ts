@@ -1,4 +1,5 @@
-import { MessageModel, IMessage } from "../Models/MessageModel";
+import { MessageModel, IMessage, Reaction } from "../Models/MessageModel.js";
+import { MongooseID } from "../../../types.js";
 
 export interface MessageResult {
 	message?: IMessage | null;
@@ -7,15 +8,15 @@ export interface MessageResult {
 
 class MessageController {
 	async createMessage(
-		username: string,
+		userId: MongooseID,
 		content: string,
 		convId: string,
-		replyMsg: IMessage | null
+		replyMsg: MongooseID
 	): Promise<MessageResult> {
 		try {
 			let message = new MessageModel({
 				conversationId: convId,
-				from: username,
+				from: userId,
 				content,
 				replyTo: replyMsg,
 			});
@@ -26,7 +27,7 @@ class MessageController {
 		}
 	}
 
-	async editMessage(id: string, content: string): Promise<MessageResult> {
+	async editMessage(id: MongooseID, content: string): Promise<MessageResult> {
 		try {
 			let message = await MessageModel.findById(id);
 			if (message != null) {
@@ -40,7 +41,7 @@ class MessageController {
 		}
 	}
 
-	async deleteMessage(id: string): Promise<MessageResult> {
+	async deleteMessage(id: MongooseID): Promise<MessageResult> {
 		try {
 			let message = await MessageModel.findById(id);
 			if (message) {
@@ -55,16 +56,19 @@ class MessageController {
 	}
 
 	async reactToMessage(
-		username: string,
-		id: string,
-		reaction: string
+		userId: MongooseID,
+		messageId: MongooseID,
+		reaction: Reaction
 	): Promise<MessageResult> {
 		try {
-			let message = await MessageModel.findById(id);
+			let message = await MessageModel.findById(messageId);
 			if (message) {
-				message.reactions[username] = reaction;
+				message.reactions.set(userId, reaction);
+				console.log(message);
 				message.markModified("reactions");
 				message = await message.save();
+			} else {
+				return { error: "Message not found" };
 			}
 			return { message };
 		} catch (error) {
@@ -72,14 +76,11 @@ class MessageController {
 		}
 	}
 
-	async getMessageById(messageId: string) : Promise<MessageResult>
-	{
-		try{
+	async getMessageById(messageId: MongooseID): Promise<MessageResult> {
+		try {
 			let message = await MessageModel.findById(messageId);
 			return { message };
-		}
-		catch(error)
-		{
+		} catch (error) {
 			return { error };
 		}
 	}
