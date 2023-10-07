@@ -15,7 +15,7 @@ function makeApp(database: Database) {
 	app.locals.database = database;
 
 	app.use(express.json());
-	app.use("/user", userRoutes.userRoutes);
+	app.use("/users", userRoutes.userRoutes);
 	app.use("/conversations", checkToken,  conversationRoutes.conversationRoutes);
 	app.use("/messages", checkToken, messageRoutes.messagesRoutes);
 
