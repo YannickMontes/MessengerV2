@@ -1,5 +1,6 @@
-import { MessageModel, IMessage, Reaction } from "../Models/MessageModel.js";
+import { MessageModel, IMessage, EReaction } from "../Models/MessageModel.js";
 import { MongooseID } from "../../../types.js";
+import { MongooseError } from "mongoose";
 
 export interface MessageResult {
 	message?: IMessage | null;
@@ -10,7 +11,7 @@ class MessageController {
 	async createMessage(
 		userId: MongooseID,
 		content: string,
-		convId: string,
+		convId: MongooseID,
 		replyMsg: MongooseID
 	): Promise<MessageResult> {
 		try {
@@ -37,7 +38,10 @@ class MessageController {
 			}
 			return { message };
 		} catch (error) {
-			return { error };
+			if(error as MongooseError)
+				return { error: (error as MongooseError).message };
+			else
+				return { error };
 		}
 	}
 
@@ -58,17 +62,13 @@ class MessageController {
 	async reactToMessage(
 		userId: MongooseID,
 		messageId: MongooseID,
-		reaction: Reaction
+		reaction: EReaction
 	): Promise<MessageResult> {
 		try {
 			let message = await MessageModel.findById(messageId);
 			if (message) {
 				message.reactions.set(userId, reaction);
-				console.log(message);
-				message.markModified("reactions");
 				message = await message.save();
-			} else {
-				return { error: "Message not found" };
 			}
 			return { message };
 		} catch (error) {

@@ -2,10 +2,11 @@ import * as http from "http";
 import express from "express";
 import { Server } from "socket.io";
 import { Database } from "./database/database.js";
-import onSocketConnection from "./socket/socketController.js";
 import userRoutes from "./routes/userRoutes.js";
 import conversationRoutes from "./routes/conversationRoutes.js";
+import messageRoutes from "./routes/messageRoutes.js";
 import checkToken from "./middleware/checkToken.js";
+import { SocketController } from "./socket/socketController.js";
 
 const app = express();
 
@@ -13,19 +14,16 @@ function makeApp(database: Database) {
 	const server = http.createServer(app);
 	app.locals.database = database;
 
-	//   const userRoutes = require("./routes/userRoutes");
-	//   console.log(userRoutes);
-	//   const { conversationRoutes } = require("./routes/conversationRoutes");
-	// console.log(router);
 	app.use(express.json());
 	app.use("/user", userRoutes.userRoutes);
-	app.use("/conversation", checkToken, conversationRoutes.conversationRoutes);
+	app.use("/conversations", checkToken,  conversationRoutes.conversationRoutes);
+	app.use("/messages", checkToken, messageRoutes.messagesRoutes);
 
 	const io = new Server(server, { cors: { origin: "*" } });
 
-	io.on("connection", (socket) => {
-		onSocketConnection(io, socket, database);
-	});
+	let socketController = new SocketController(io, database);
+
+	app.locals.sockerController = socketController;
 
 	return { app, server };
 }

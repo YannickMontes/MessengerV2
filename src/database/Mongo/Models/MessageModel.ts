@@ -9,10 +9,10 @@ export interface IMessage extends Document {
 	replyTo: MongooseID;
 	edited: boolean;
 	deleted: boolean;
-	reactions: Map<MongooseID, Reaction>;
+	reactions: Map<MongooseID, EReaction>;
 }
 
-export enum Reaction
+export enum EReaction
 {
 	HAPPY = "HAPPY",
 	SAD = "SAD",

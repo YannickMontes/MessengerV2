@@ -1,18 +1,14 @@
 import express, { Request, Response } from "express";
-import { userBodyFormat } from "../requestFormat.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import config from "../config.js";
+import joiValidator from "../middleware/joiValidator.js";
 
 require("dotenv").config();
 
 const router = express.Router();
 
-router.post("/login", async (req: Request, res: Response) => {
-	//   const isBodyCorrect = userBodyFormat.validate(req.body);
-	//   if (isBodyCorrect.error)
-	//     return res.status(400).json({ error: isBodyCorrect.error.details[0].message });
-
+router.post("/login", joiValidator, async (req: Request, res: Response) => {
 	try {
 		const { user, error } =
 			await req.app.locals.database.userController.getUser(
@@ -62,7 +58,15 @@ router.post("/login", async (req: Request, res: Response) => {
 });
 
 router.get("/online", async (req: Request, res: Response) => {
-	return res.status(200).send({ onlineUsers: req.app.locals.onlineUsers });
+	let {users, error } = await req.app.locals.database.userController.getAllUsersWithIds(Object.values(req.app.locals.database.activeUsers));
+	if(error)
+	{
+		return res.status(500).send({error});
+	}
+	else
+	{
+		return res.status(200).send({ users });
+	}
 });
 
 export default { userRoutes: router };
