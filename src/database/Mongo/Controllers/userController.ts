@@ -2,6 +2,7 @@ import bcrypt from "bcrypt";
 import User, { IUser } from "../Models/UserModel.js"; // You should import the appropriate User model and IUser interface.
 import { pickRandom } from "../../../pictures.js";
 import { MongooseID } from "../../../types.js";
+import mongoose from "mongoose";
 
 const ACTIVE_TIMER_MS = 20000;
 
@@ -103,6 +104,11 @@ class UserController {
 	{
 		try
 		{
+			for(let id of ids)
+			{
+				if(!mongoose.isValidObjectId(id))
+					return {error: `${id} is not a valid id.`};
+			}
 			const users = await User.find({
 				_id: ids
 			});
