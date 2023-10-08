@@ -11,18 +11,20 @@ const loginBodyFormat = joi.object({
 });
 
 const createMessageBodyFormat = joi.object({
-	conversationId: joi.string().not(null).not(""),
 	messageContent: joi.string().required().not(null).not(""),
 	messageReplyId: joi.string().not(null).not("").optional(),
 });
 
 const editMessageBodyFormat = joi.object({
-	conversationId: joi.string().not(null).not(""),
 	newMessageContent: joi.string().required().not(null).not(""),
 });
 
 const reactMessageBodyFormat = joi.object({
 	reaction: joi.string().required().valid(... Object.values(EReaction)),
+});
+
+const seeConversationBodyFormat = joi.object({
+	messageId: joi.string().required().not(null).not(""),
 });
 
 const createConversationBodyFormat = joi.object({
@@ -70,6 +72,11 @@ class JoiRequestValidator
 			method: "POST",
 			validatorSchema: loginBodyFormat,
 		},
+		{
+			route:"/conversations/see/:id",
+			method: "POST",
+			validatorSchema: seeConversationBodyFormat
+		}
 	];
 
 	validate(request: Request): JoiRequestValidatorResponse 

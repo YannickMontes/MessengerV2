@@ -1,5 +1,7 @@
 import express, { Request, Response } from "express";
 import joiValidator from "../middleware/joiValidator";
+import { IConversation } from "../database/Mongo/Models/ConversationModel";
+import { IMessage } from "../database/Mongo/Models/MessageModel";
 import mongoose from "mongoose";
 const router = express.Router();
 
@@ -16,9 +18,18 @@ router.get("/", joiValidator, async (req: Request, res: Response) => {
 });
 
 router.post("/", joiValidator, async (req: Request, res: Response) => {
+
 	let participants = req.body.concernedUsersIds;
 	participants.push(res.locals.userId);
 	
+	let convRes = await req.app.locals.database.conversationController.getConversationWithParticipants(participants);
+
+	if(convRes.error)
+		return res.status(500).send({ error: convRes.error });
+
+	if(convRes.conversation)
+		return res.status(200).send({ conversation: convRes.conversation });
+
 	let userRes = await req.app.locals.database.userController.getAllUsersWithIds(participants);
 	
 	if(userRes.error || !userRes.users)
@@ -33,6 +44,9 @@ router.post("/", joiValidator, async (req: Request, res: Response) => {
 
 	if(error)
 		return res.status(500).send({ error });
+
+	req.app.locals.sockerController.sendNewConversation(conversation as IConversation);
+
 	return res.status(200).send({conversation});
 });
 
@@ -49,12 +63,43 @@ router.post("/:id", joiValidator, async (req: Request, res: Response) => {
 	let msgResponse = await req.app.locals.database.messageController.createMessage(res.locals.userId
 		, req.body.messageContent, req.params.id, req.body.messageReplyId);
 
-	if(msgResponse.error)
+	if(msgResponse.error || !msgResponse.message)
 		return res.status(500).send({ error: msgResponse.error });
+
+	let addMsgToConvRes = await req.app.locals.database.conversationController.addMessageToConversation(convResponse.conversation, msgResponse.message._id);
 	
+	if(msgResponse.error || !addMsgToConvRes.conversation)
+		return res.status(500).send({error: addMsgToConvRes.error});
+
 	req.app.locals.sockerController.sendNewMessage(req.params.id, msgResponse.message);
 
 	return res.status(200).send({message: msgResponse.message});
+});
+
+router.post("/see/:id", joiValidator, async (req: Request, res: Response) => {
+	if(!mongoose.isValidObjectId(req.params.id))
+		return res.status(400).send({error: "Requested conversation id is not a correct id."});
+
+	if(!mongoose.isValidObjectId(req.body.messageId))
+		return res.status(400).send({error: "Seen messageId is not a correct id."});
+
+	let userRes = await req.app.locals.database.userController.getUserById(res.locals.userId);
+
+	if (userRes.error) 
+		return res.status(500).send({ error: userRes.error });
+
+	if(!userRes.user)
+		return res.status(404).send({ error: "User not found." });
+
+	let seeConvRes = await req.app.locals.database.conversationController.setConversationSeenForUserAndMessage(userRes.user
+		, req.params.id, req.body.messageId);
+
+	if (seeConvRes.error ||	!seeConvRes.conversation)
+		return res.status(500).send({ error: seeConvRes.error });
+
+	req.app.locals.sockerController.sendSeeConversation(seeConvRes.conversation);
+
+	return res.status(200).send({conversation: seeConvRes.conversation});
 });
 
 router.delete("/:id", async (req: Request, res: Response) => {
@@ -63,10 +108,18 @@ router.delete("/:id", async (req: Request, res: Response) => {
 			await req.app.locals.database.conversationController.deleteConversation(
 				req.params.id
 			);
-		if (error) res.status(500).send(error);
-		else res.status(200).send(conversation);
+		if (error)
+		{
+			return res.status(500).send(error);
+		} 
+		else if(conversation)
+		{
+			req.app.locals.sockerController.sendConversationDeleted(conversation);
+
+			return res.status(200).send(conversation);
+		}
 	} catch (error) {
-		res.status(500).send(error);
+		return res.status(500).send(error);
 	}
 });
 

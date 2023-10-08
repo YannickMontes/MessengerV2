@@ -1,9 +1,10 @@
 import mongoose, { Schema, Document, SchemaType } from "mongoose";
 import { IMessage } from "./MessageModel.js";
 import { MongooseID } from "../../../types.js";
+import { IUser } from "./UserModel.js";
 
 export interface IConversation extends Document {
-	participants: MongooseID[];
+	participants: MongooseID[] | IUser[];
 	messages: IMessage[] | MongooseID[];
 	title: string | null;
 	lastUpdate: Date;
@@ -11,7 +12,7 @@ export interface IConversation extends Document {
 }
 
 const conversationSchema: Schema<IConversation> = new Schema<IConversation>(
-	{
+{
 		participants: {
 			type: [{type: Schema.ObjectId, ref: 'User'}],
 			required: true,

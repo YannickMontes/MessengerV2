@@ -64,7 +64,6 @@ class UserController {
 	async getUser(username: string): Promise<UserResult> {
 		try {
 			const user = await User.findOne({ username }, "+password");
-			console.log(user);
 			return { user };
 		} catch (error) {
 			return { error };

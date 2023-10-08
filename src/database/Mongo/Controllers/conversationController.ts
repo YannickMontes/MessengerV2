@@ -19,15 +19,13 @@ class ConversationController
 	{
 		try
 		{
-			let allTypeConv = await ConversationModel.find();
-			let conversation = allTypeConv.find((conv) =>
+			let conversation = await ConversationModel.findOne({participants: participants}); //every((participant) => participants.includes(participant));
+			console.log(conversation);
+			if(conversation)
 			{
-				conv.participants.length === participants.length && participants.every((participant) =>
-						conv.participants.includes(participant)
-					);
-			});
-			conversation = await conversation?.populate("messages");
-			conversation = await conversation?.populate("participants");
+				conversation = await conversation?.populate("messages");
+				conversation = await conversation?.populate("participants");
+			}
 			return { conversation };
 		} catch (error) {
 			return { error };
@@ -113,7 +111,7 @@ class ConversationController
 		}
 		if (!conversation) return { conversation: null };
 		try {
-			conversation.seen.set(user.username, messageId);
+			conversation.seen.set(user._id, messageId);
 			conversation.markModified("seen");
 			conversation = await conversation.save();
 			return { conversation };

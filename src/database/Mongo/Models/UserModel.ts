@@ -1,6 +1,8 @@
 import mongoose, { Schema, Document } from "mongoose";
+import { MongooseID } from "../../../types";
 
 export interface IUser extends Document {
+	_id: MongooseID;
 	username: string;
 	password: string;
 	profilePicId: string;
