@@ -1,12 +1,12 @@
 import * as http from "http";
 import express from "express";
 import { Server } from "socket.io";
-import { Database } from "./database/database.js";
-import userRoutes from "./routes/userRoutes.js";
-import conversationRoutes from "./routes/conversationRoutes.js";
-import messageRoutes from "./routes/messageRoutes.js";
-import checkToken from "./middleware/checkToken.js";
-import { SocketController } from "./socket/socketController.js";
+import { Database } from "./database/database";
+import userRoutes from "./routes/userRoutes";
+import conversationRoutes from "./routes/conversationRoutes";
+import messageRoutes from "./routes/messageRoutes";
+import checkToken from "./middleware/checkToken";
+import { SocketController } from "./socket/socketController";
 
 const app = express();
 

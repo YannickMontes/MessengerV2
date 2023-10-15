@@ -1,5 +1,5 @@
-import ConversationModel, { IConversation } from "../Models/ConversationModel.js";
-import { IUser } from "../Models/UserModel.js";
+import ConversationModel, { IConversation } from "../Models/ConversationModel";
+import { IUser } from "../Models/UserModel";
 import { MongooseID } from "../../../types";
 
 interface ConversationResult {
@@ -20,7 +20,6 @@ class ConversationController
 		try
 		{
 			let conversation = await ConversationModel.findOne({participants: participants}); //every((participant) => participants.includes(participant));
-			console.log(conversation);
 			if(conversation)
 			{
 				conversation = await conversation?.populate("messages");

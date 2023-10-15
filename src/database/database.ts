@@ -1,39 +1,40 @@
-import type { ConversationController } from "./Mongo/Controllers/conversationController.js";
-import type { MessageController } from "./Mongo/Controllers/messageController.js";
-import type { UserController } from "./Mongo/Controllers/userController.js";
-import { conversationController } from "./Mongo/Controllers/conversationController.js";
-import { messageController } from "./Mongo/Controllers/messageController.js";
-import { userController } from "./Mongo/Controllers/userController.js";
+import type { ConversationController } from "./Mongo/Controllers/conversationController";
+import type { MessageController } from "./Mongo/Controllers/messageController";
+import type { UserController } from "./Mongo/Controllers/userController";
 import mongoose from "mongoose";
-import config from "../config.js";
-import { MongooseID } from "../types.js";
+import config from "../config";
 
 class Database {
 	conversationController: ConversationController;
 	messageController: MessageController;
 	userController: UserController;
+	fromTest: boolean;
 
 	constructor(
 		conversationController: ConversationController,
 		messageController: MessageController,
-		userController: UserController
+		userController: UserController,
+		fromTest: boolean
 	) {
 		this.conversationController = conversationController;
 		this.messageController = messageController;
 		this.userController = userController;
+		this.fromTest = fromTest;
+	}
 
-		mongoose
-			.connect(config.DB_ADDRESS)
-			.then(() => console.log("DB Connected"))
-			.catch((error) => console.log("Error DB Connexion: ", error));
+	async connect()
+	{
+		try
+		{
+			let connection = await mongoose.connect(this.fromTest ? config.DB_ADDRESS_TEST : config.DB_ADDRESS);
+			console.log("DB Connected to " + this.fromTest ? config.DB_ADDRESS_TEST : config.DB_ADDRESS);
+		}
+		catch(error)
+		{
+			console.log("Error DB Connexion: ", error);
+		}
 	}
 }
 
-let DBInstance = new Database(
-	conversationController,
-	messageController,
-	userController
-);
-
-export default DBInstance;
+export default Database;
 export type { Database };

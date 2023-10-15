@@ -1,9 +1,9 @@
-import type { Database } from "../database/database.js";
+import type { Database } from "../database/database";
 import { Server, Socket } from "socket.io";
-import { IMessage } from "../database/Mongo/Models/MessageModel.js";
-import { MongooseID } from "../types.js";
-import { IConversation } from "../database/Mongo/Models/ConversationModel.js";
-import { IUser } from "../database/Mongo/Models/UserModel.js";
+import { IMessage } from "../database/Mongo/Models/MessageModel";
+import { MongooseID } from "../types";
+import { IConversation } from "../database/Mongo/Models/ConversationModel";
+import { IUser } from "../database/Mongo/Models/UserModel";
 
 interface ActiveUsers {
 	[socketId: string]: {

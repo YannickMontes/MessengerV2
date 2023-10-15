@@ -1,5 +1,5 @@
-import { MessageModel, IMessage, EReaction } from "../Models/MessageModel.js";
-import { MongooseID } from "../../../types.js";
+import { MessageModel, IMessage, EReaction } from "../Models/MessageModel";
+import { MongooseID } from "../../../types";
 import { MongooseError } from "mongoose";
 
 export interface MessageResult {
@@ -86,7 +86,7 @@ class MessageController {
 	}
 }
 
-let messageController = new MessageController();
+const messageController = new MessageController();
 
 export { messageController };
 export type { MessageController };

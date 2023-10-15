@@ -1,17 +1,18 @@
 import express, { Request, Response } from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import config from "../config.js";
-import joiValidator from "../middleware/joiValidator.js";
-import { MongooseID } from "../types.js";
-import { IUser } from "../database/Mongo/Models/UserModel.js";
+import config from "../config";
+import joiValidator from "../middleware/joiValidator";
+import { MongooseID } from "../types";
+import { IUser } from "../database/Mongo/Models/UserModel";
 
 require("dotenv").config();
 
 const router = express.Router();
 
 router.post("/login", joiValidator, async (req: Request, res: Response) => {
-	try {
+	try 
+	{
 		let userRes =
 			await req.app.locals.database.userController.getUser(
 				req.body.username
@@ -21,7 +22,7 @@ router.post("/login", joiValidator, async (req: Request, res: Response) => {
 			return res.status(500).json({ error: userRes.error });
 
 		let user: IUser | null | undefined = userRes.user;
-
+		let isNewUser:boolean;
 		if (!user || !user.username) {
 			// SIGNUP
 			const hash = await bcrypt.hash(
@@ -38,6 +39,7 @@ router.post("/login", joiValidator, async (req: Request, res: Response) => {
 				return res.status(500).json({ error: createUserRes.error });
 
 			user = createUserRes.user;
+			isNewUser = true;
 		} 
 		else 
 		{
@@ -49,14 +51,17 @@ router.post("/login", joiValidator, async (req: Request, res: Response) => {
 
 			if (!pwdCorrect)
 				return res.status(401).json( {error: "Incorrect password."});
+			isNewUser = false;
 		}
-			const token = jwt.sign({ userId: user._id }
-				, config.SECRET_KEY
-				, { expiresIn: config.TOKEN_EXP});
-			//@ts-ignore
-			user.password = undefined;
-			res.status(200).json({ user, token });
-		} catch (error) {
+		const token = jwt.sign({ userId: user._id }
+			, config.SECRET_KEY
+			, { expiresIn: config.TOKEN_EXP});
+		//@ts-ignore
+		user.password = undefined;
+		res.status(200).json({ user, token, isNewUser });
+	} 
+	catch (error) 
+	{
 		console.log(error);
 		return res.status(500).json({ error });
 	}

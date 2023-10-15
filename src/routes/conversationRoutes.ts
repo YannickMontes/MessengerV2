@@ -1,7 +1,6 @@
 import express, { Request, Response } from "express";
 import joiValidator from "../middleware/joiValidator";
 import { IConversation } from "../database/Mongo/Models/ConversationModel";
-import { IMessage } from "../database/Mongo/Models/MessageModel";
 import mongoose from "mongoose";
 const router = express.Router();
 
@@ -12,12 +11,20 @@ router.get("/", joiValidator, async (req: Request, res: Response) => {
 		);
 
 	if (error) 
-		res.status(500).send(error);
+		res.status(500).send({ error });
 	else 
-		res.status(200).send(conversations);
+		res.status(200).send({ conversations });
 });
 
 router.post("/", joiValidator, async (req: Request, res: Response) => {
+	for (let userId of req.body.concernedUsersIds)
+	{
+		if (!mongoose.isValidObjectId(userId))
+		{
+			console.log(false);
+			return res.status(400).send({error: "Concerned user ID " + userId + "is not an id."});
+		}
+	}
 
 	let participants = req.body.concernedUsersIds;
 	participants.push(res.locals.userId);
@@ -35,10 +42,23 @@ router.post("/", joiValidator, async (req: Request, res: Response) => {
 	if(userRes.error || !userRes.users)
 		return res.status(400).send({ error: userRes.error });
 
+	if(userRes.users.length != participants.length)
+	{
+		let missingsUsers = "";
+		for(let participant of participants)
+		{
+			let isContains = userRes.users.find(user => user._id == participant);
+			if(!isContains)
+				missingsUsers += (missingsUsers == "" ? "" : ", ") + participant;
+		}
+
+		return res.status(400).send({ error: "Users not found: " + missingsUsers });
+	}
+
 	let participantsNames = [];
 	for(let participant of userRes.users)
 	{
-		participantsNames.push(participant.username)
+		participantsNames.push(participant.username) 
 	}
 	let {conversation, error} = await req.app.locals.database.conversationController.createConversation(participants, participantsNames);
 
@@ -110,16 +130,16 @@ router.delete("/:id", async (req: Request, res: Response) => {
 			);
 		if (error)
 		{
-			return res.status(500).send(error);
+			return res.status(500).send({error});
 		} 
 		else if(conversation)
 		{
 			req.app.locals.sockerController.sendConversationDeleted(conversation);
 
-			return res.status(200).send(conversation);
+			return res.status(200).send({conversation});
 		}
 	} catch (error) {
-		return res.status(500).send(error);
+		return res.status(500).send({error});
 	}
 });
 

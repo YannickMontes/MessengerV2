@@ -1,7 +1,7 @@
 import bcrypt from "bcrypt";
-import User, { IUser } from "../Models/UserModel.js"; // You should import the appropriate User model and IUser interface.
-import { pickRandom } from "../../../pictures.js";
-import { MongooseID } from "../../../types.js";
+import User, { IUser } from "../Models/UserModel";
+import { pickRandom } from "../../../pictures";
+import { MongooseID } from "../../../types";
 import mongoose from "mongoose";
 
 const ACTIVE_TIMER_MS = 20000;
@@ -99,7 +99,7 @@ class UserController {
 		}
 	}
 
-	async getAllUsersWithIds(ids: MongooseID[])
+	async getAllUsersWithIds(ids: MongooseID[]) : Promise<UsersResult>
 	{
 		try
 		{
@@ -120,7 +120,7 @@ class UserController {
 	}
 }
 
-let userController = new UserController();
+const userController = new UserController();
 
 export { userController };
 export type { UserController };

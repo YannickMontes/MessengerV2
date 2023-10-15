@@ -1,7 +1,7 @@
-import mongoose, { Schema, Document, SchemaType } from "mongoose";
-import { IMessage } from "./MessageModel.js";
-import { MongooseID } from "../../../types.js";
-import { IUser } from "./UserModel.js";
+import mongoose, { Schema, Document } from "mongoose";
+import { IMessage } from "./MessageModel";
+import { MongooseID } from "../../../types";
+import { IUser } from "./UserModel";
 
 export interface IConversation extends Document {
 	participants: MongooseID[] | IUser[];
