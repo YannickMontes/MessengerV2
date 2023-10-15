@@ -7,14 +7,24 @@ import conversationRoutes from "./routes/conversationRoutes";
 import messageRoutes from "./routes/messageRoutes";
 import checkToken from "./middleware/checkToken";
 import { SocketController } from "./socket/socketController";
+import cors from "cors";
+import requestLogger from "./middleware/logger";
 
-const app = express();
 
-function makeApp(database: Database) {
+function makeApp(database: Database) 
+{
+	const app = express();
+
+	app.use(cors({
+		credentials: true,
+		origin: "http://localhost:3000"
+	}));
+
 	const server = http.createServer(app);
 	app.locals.database = database;
 
 	app.use(express.json());
+	app.use(requestLogger);
 	app.use("/users", userRoutes.userRoutes);
 	app.use("/conversations", checkToken,  conversationRoutes.conversationRoutes);
 	app.use("/messages", checkToken, messageRoutes.messagesRoutes);

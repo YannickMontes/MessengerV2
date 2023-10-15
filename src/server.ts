@@ -12,6 +12,7 @@ let DBInstance = new Database(
 	false
 );
 
+DBInstance.connect();
 const { app, server } = makeApp(DBInstance);
 
 server.listen(config.PORT, () => {

@@ -14,10 +14,10 @@ router.post("/login", joiValidator, async (req: Request, res: Response) => {
 	try 
 	{
 		let userRes =
-			await req.app.locals.database.userController.getUser(
-				req.body.username
+		await req.app.locals.database.userController.getUser(
+			req.body.username
 			);
-
+			
 		if (userRes.error) 
 			return res.status(500).json({ error: userRes.error });
 

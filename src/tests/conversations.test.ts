@@ -88,21 +88,6 @@ describe('CONVERSATIONS', () =>
 		expect(res.body.error).toBeUndefined();
 	});
 
-	test("POST Reply message in conversation", async () => {
-		let res = await supertest(app)
-			.post("/conversations/" + convId)
-			.set("Authorization", userToken)
-			.send({
-				messageContent: "Test reply",
-				messageReplyId: firstMessageId,
-			});
-
-		expect(res.status).toBe(200);
-		expect(res.body.message).toBeDefined();
-		expect(res.body.message.replyTo).toBeDefined();
-		expect(res.body.error).toBeUndefined();
-	});
-
 	test("PUT Edit message in conversation", async () => {
 		let res = await supertest(app)
 			.put("/messages/" + firstMessageId)

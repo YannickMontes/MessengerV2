@@ -27,7 +27,7 @@ class Database {
 		try
 		{
 			let connection = await mongoose.connect(this.fromTest ? config.DB_ADDRESS_TEST : config.DB_ADDRESS);
-			console.log("DB Connected to " + this.fromTest ? config.DB_ADDRESS_TEST : config.DB_ADDRESS);
+			console.log(`DB Connected to ${this.fromTest ? config.DB_ADDRESS_TEST : config.DB_ADDRESS}`);
 		}
 		catch(error)
 		{
