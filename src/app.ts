@@ -7,8 +7,14 @@ import conversationRoutes from "./routes/conversationRoutes.js";
 import messageRoutes from "./routes/messageRoutes.js";
 import checkToken from "./middleware/checkToken.js";
 import { SocketController } from "./socket/socketController.js";
+import cors from "cors";
 
 const app = express();
+
+app.use(cors({
+	credentials: true,
+	origin: "http://localhost:3000"
+}))
 
 function makeApp(database: Database) {
 	const server = http.createServer(app);
