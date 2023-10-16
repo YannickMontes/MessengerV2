@@ -67,6 +67,19 @@ router.post("/login", joiValidator, async (req: Request, res: Response) => {
 	}
 });
 
+router.get("/all", async (req:Request, res:Response) => 
+{
+	let { users, error } = await req.app.locals.database.userController.getAllUsers();
+	if(error)
+	{
+		return res.status(500).send({ error });
+	}
+	else
+	{
+		return res.status(200).send({ users });
+	}
+});
+
 router.get("/online", async (req: Request, res: Response) => 
 {
 	let ids:MongooseID[] = [];
@@ -75,7 +88,7 @@ router.get("/online", async (req: Request, res: Response) =>
 		ids.push(activeUser.userId);
 	}
 
-	let {users, error } = await req.app.locals.database.userController.getAllUsersWithIds(ids);
+	let { users, error } = await req.app.locals.database.userController.getAllUsersWithIds(ids);
 	if(error)
 	{
 		return res.status(500).send({error});
