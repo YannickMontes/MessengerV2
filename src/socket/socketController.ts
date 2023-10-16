@@ -30,6 +30,12 @@ export class SocketController
 
 			this.activeUsers[socket.id] = { userId:userId as MongooseID, socket: socket };
 			this.registerUserOnRooms(userId as MongooseID, socket);
+
+			socket.broadcast.emit("@onConnected", { userId });
+
+			socket.on("disconnect", () => {
+				socket.broadcast.emit("@onDisconnected", { userId });
+			});
 		});
 	}
 
