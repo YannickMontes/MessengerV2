@@ -19,7 +19,7 @@ class ConversationController
 	{
 		try
 		{
-			let conversation = await ConversationModel.findOne({participants: participants}); //every((participant) => participants.includes(participant));
+			let conversation = await ConversationModel.findOne({participants: {$all: participants, $size: participants.length}});
 			if(conversation)
 			{
 				conversation = await conversation?.populate("messages");
